@@ -1,0 +1,28 @@
+name: Deploy to Sandbox
+
+on:
+  push:
+    branches:
+      - develop   # merges to develop → deploy to sandbox
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Authenticate to Sandbox
+        run: |
+          echo "${{ secrets.SF_SANDBOX_AUTH_URL }}" > auth_url.txt
+          sf org login sfdx-url --sfdx-url-file auth_url.txt --alias sandbox
+
+      - name: Deploy
+        run: |
+          sf project deploy start \
+            --source-dir force-app \
+            --target-org sandbox \
+            --test-level RunLocalTests \
+            --wait 30
